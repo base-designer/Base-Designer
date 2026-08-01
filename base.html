@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Base Designer</title>
+
+<style>
+body{
+    margin:0;
+    background:#0b4f6c; /* azul mar */
+    color:white;
+    font-family:Arial,Helvetica,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+h2{
+    margin:15px;
+}
+
+#toolbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:15px;
+    flex-wrap:wrap;
+}
+
+#app{
+    display:block;
+    width:100%;
+    max-width:1102px;
+    margin:0 auto;
+    padding:0 20px 20px;
+    box-sizing:border-box;
+}
+
+#main{
+    width:100%;
+    max-width:1102px;
+    min-width:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    margin:0 auto;
+}
+
+#toolbar{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    margin-bottom:15px;
+    flex-wrap:wrap;
+    justify-content:center;
+    width:100%;
+    max-width:1102px;
+}
+
+#sidebar{
+    width:260px;
+    position:relative;
+    margin:0 auto;
+}
+
+@media (min-width: 1400px){
+    #sidebar{
+        position:fixed;
+        top:140px;
+        left:20px;
+    }
+}
+
+.panel{
+    background:rgba(255,255,255,0.08);
+    border:1px solid rgba(255,255,255,0.12);
+    border-radius:14px;
+    padding:18px;
+    box-shadow:0 14px 30px rgba(0,0,0,0.22);
+}
+
+.panel h3{
+    margin:0 0 10px;
+    font-size:1rem;
+    color:#cfe9ff;
+}
+
+.panel .note{
+    margin:0 0 12px;
+    font-size:0.92rem;
+    color:#d7eaf6;
+}
+
+#jsonList{
+    list-style:none;
+    padding:0;
+    margin:0;
+}
+
+#jsonList li{
+    margin-bottom:10px;
+}
+
+#jsonList button{
+    width:100%;
+    text-align:left;
+    background:#1f6987;
+    border:1px solid rgba(255,255,255,0.12);
+    color:white;
+    padding:10px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    transition:transform 0.15s ease, background 0.15s ease;
+}
+
+#jsonList button:hover{
+    background:#2b8db0;
+    transform:translateX(2px);
+}
+
+#openFileBtn{
+    width:100%;
+    padding:10px 12px;
+    margin-top:10px;
+    background:#333;
+    border:none;
+    border-radius:8px;
+    color:white;
+    cursor:pointer;
+}
+
+@media (max-width: 1040px){
+    #app{
+        align-items:center;
+    }
+
+    #sidebar{
+        width:100%;
+        position:static;
+        margin-top:20px;
+    }
+}
+
+button{
+    padding:8px 14px;
+    border:none;
+    cursor:pointer;
+    border-radius:5px;
+    font-weight:bold;
+}
+
+button.active{
+    background:#4CAF50;
+    color:white;
+}
+
+.object-size-btn.active{
+    background:#ff9800;
+    color:white;
+}
+
+#grid{
+    display:grid;
+    grid-template-columns:repeat(60,12px);
+    grid-template-rows:repeat(60,12px);
+    gap:1px;
+    background:#555;
+    user-select:none;
+}
+
+.grid-wrapper{
+    width:90vw;
+    height:80vh;
+    max-width:1102px;
+    max-height:1102px;
+    display:block;
+    position:relative;
+    /* no centrar con flex: posicionamos el grid en absolute y calculamos pan */
+    overflow:hidden;
+    margin:20px auto;
+    border:4px solid rgba(255,255,255,0.08);
+    border-radius:10px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35) inset;
+}
+
+#grid{
+    width:779px;
+    height:779px;
+    position:absolute;
+    left:0;
+    top:0;
+}
+
+.grid-wrapper::after{
+    content:"";
+    position:absolute;
+    inset:8px;
+    border:2px dashed rgba(255,255,255,0.06);
+    pointer-events:none;
+    border-radius:6px;
+}
+
+.cell{
+    width:12px;
+    height:12px;
+    background:#3CB371; /* verde césped */
+}
+
+.object-layer{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+    z-index:2;
+}
+
+.object{
+    position:absolute;
+    border:1px solid rgba(255,255,255,0.9);
+    border-radius:3px;
+    box-sizing:border-box;
+    box-shadow:0 0 0 1px rgba(0,0,0,0.25) inset, 0 6px 12px rgba(0,0,0,0.25);
+    pointer-events:auto;
+}
+
+.object.tree{
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    overflow:visible;
+}
+
+.object.tree::before{
+    content:"";
+    position:absolute;
+    inset:8% 12% 12% 12%;
+    background:linear-gradient(180deg, #7b4b2a 0%, #5c341f 100%);
+    border-radius:20% 20% 25% 25%;
+    clip-path:polygon(50% 0%, 80% 25%, 100% 35%, 85% 45%, 95% 70%, 70% 60%, 50% 100%, 30% 60%, 5% 70%, 15% 45%, 0% 35%, 20% 25%);
+    box-shadow:inset 0 -4px 0 rgba(0,0,0,0.18);
+}
+
+.object.tree::after{
+    content:"";
+    position:absolute;
+    left:50%;
+    bottom:8%;
+    width:20%;
+    height:24%;
+    transform:translateX(-50%);
+    background:linear-gradient(180deg, #8d5a3b 0%, #6b3f26 100%);
+    border-radius:3px 3px 6px 6px;
+    box-shadow:inset 0 -2px 0 rgba(0,0,0,0.18);
+}
+
+.object.tree .tree-canopy{
+    position:absolute;
+    inset:0;
+    pointer-events:none;
+}
+
+.object.tree .tree-canopy::before,
+.object.tree .tree-canopy::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    background:radial-gradient(circle at 30% 30%, #7bc96f 0%, #3e8e41 60%, #2b6b2f 100%);
+    box-shadow:0 0 0 1px rgba(255,255,255,0.18) inset;
+}
+
+.object.tree .tree-canopy::before{
+    width:58%;
+    height:58%;
+    left:12%;
+    top:8%;
+}
+
+.object.tree .tree-canopy::after{
+    width:46%;
+    height:46%;
+    right:8%;
+    top:18%;
+}
+</style>
+</head>
+<body>
+
+<h2>Base Designer</h2>
+
+<div id="app">
+    <aside id="sidebar">
+        <div class="panel">
+            <h3>Archivos JSON</h3>
+            <p class="note">Haz clic en un archivo para cargarlo.</p>
+            <ul id="jsonList"></ul>
+            <button id="openFileBtn">📂 Cargar JSON local</button>
+            <input type="file" id="loadInput" accept=".json" hidden>
+        </div>
+    </aside>
+
+    <div id="main">
+        <div id="toolbar">
+
+            <button id="paintBtn" class="active">🎨 Paint</button>
+
+            <button id="eraseBtn">🧽 Erase</button>
+
+            <button id="objectModeBtn">📦 Buildings</button>
+
+            <button id="obj2Btn" class="object-size-btn active" data-size="2">2x2</button>
+            <button id="obj3Btn" class="object-size-btn" data-size="3">3x3</button>
+            <button id="obj4Btn" class="object-size-btn" data-size="4">4x4</button>
+            <button id="obj5Btn" class="object-size-btn" data-size="5">5x5</button>
+
+            <input type="color" id="colorPicker" value="#666666">
+
+            <button id="clearBtn">🗑️ Clear</button>
+
+            <button id="saveBtn">💾 Save</button>
+
+            <button id="zoomReset" title="Resetear zoom al 100%">100%</button>
+
+        </div>
+
+        <div class="grid-wrapper"><div id="grid"></div></div>
+    </div>
+</div>
+
+<script>
+
+const grid=document.getElementById("grid");
+const paintBtn=document.getElementById("paintBtn");
+const eraseBtn=document.getElementById("eraseBtn");
+const objectModeBtn=document.getElementById("objectModeBtn");
+const colorPicker=document.getElementById("colorPicker");
+
+const SIZE=60;
+
+let drawing=false;
+
+let eraseMode=false;
+
+let objectMode=false;
+
+let objectEraseMode=false;
+
+let selectedObjectSize=2;
+
+const cells=[];
+const objects=[];
+
+const jsonFiles = [
+    {title:'Cuadricula', file:'cuadricula.json'},
+    {title:'No-Face', file:'no-face.json'},
+    {title:'Squid', file:'Squid.json'}
+];
+
+const loadInput = document.getElementById('loadInput');
+const jsonList = document.getElementById('jsonList');
+const openFileBtn = document.getElementById('openFileBtn');
+
+function renderJsonMenu(){
+    if(!jsonList) return;
+    jsonList.innerHTML = '';
+    jsonFiles.forEach(item=>{
+        const li = document.createElement('li');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = item.title;
+        button.onclick = () => loadJsonByFilename(item.file);
+        li.appendChild(button);
+        jsonList.appendChild(li);
+    });
+}
+
+function isFileProtocol(){
+    return window.location.protocol === 'file:';
+}
+
+function loadJsonByFilename(file){
+    if(isFileProtocol()){
+        alert('No se pueden cargar archivos JSON con fetch cuando abres la página desde file://. Usa un servidor local o el botón "Cargar JSON local".');
+        return;
+    }
+
+    fetch(file)
+        .then(response=>{
+            if(!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        })
+        .then(loadGridData)
+        .catch(error=>{
+            alert(`No se pudo cargar ${file}: ${error.message}`);
+        });
+}
+
+if(openFileBtn){
+    openFileBtn.addEventListener('click', ()=>loadInput?.click());
+}
+
+renderJsonMenu();
+
+function createGrid(){
+
+for(let y=0;y<SIZE;y++){
+
+    for(let x=0;x<SIZE;x++){
+
+        const cell=document.createElement("div");
+
+        cell.className="cell";
+
+        cell.dataset.x=x;
+
+        cell.dataset.y=y;
+
+        grid.appendChild(cell);
+
+        cells.push(cell);
+
+    }
+
+}
+
+}
+
+createGrid();
+
+const objectLayer=document.createElement("div");
+objectLayer.className="object-layer";
+grid.appendChild(objectLayer);
+
+// Determinar color "vacío" de las celdas según CSS (por si se cambia)
+const EMPTY_COLOR = (cells[0] && getComputedStyle(cells[0]).backgroundColor) || '#2d2d2d';
+
+// Zoom con rueda del ratón y pan con clic derecho arrastrando
+let userScale = 1;
+const MIN_USER_SCALE = 0.2;
+const MAX_USER_SCALE = 5;
+const SCALE_FACTOR = 1.12; // multiplicador por paso
+
+const gridEl = document.getElementById('grid');
+let panX = 0, panY = 0;
+if(gridEl){
+    // usar origen 0 0 para simplificar las matemáticas de pan/zoom
+    gridEl.style.transformOrigin = '0 0';
+    const ROT_ANGLE = -45 * Math.PI / 180; // rotación aplicada en transform
+    const COS_R = Math.cos(ROT_ANGLE);
+    const SIN_R = Math.sin(ROT_ANGLE);
+    const INV_COS = Math.cos(-ROT_ANGLE);
+    const INV_SIN = Math.sin(-ROT_ANGLE);
+    function applyTransform(){
+        // aplicar translate en píxeles, luego rotación fija, luego escala
+        gridEl.style.transform = `translate(${panX}px, ${panY}px) rotate(-45deg) scale(${userScale})`;
+    }
+
+    // rueda para zoom centrado en cursor (toma en cuenta la rotación)
+    gridEl.addEventListener('wheel', function(e){
+        e.preventDefault();
+        const rect = gridEl.getBoundingClientRect();
+        const cursorX = e.clientX - rect.left;
+        const cursorY = e.clientY - rect.top;
+
+        const oldScale = userScale;
+        const newScale = (e.deltaY < 0) ? Math.min(MAX_USER_SCALE, oldScale * SCALE_FACTOR) : Math.max(MIN_USER_SCALE, oldScale / SCALE_FACTOR);
+
+        // vector desde pan hasta cursor in screen space
+        const dx = cursorX - panX;
+        const dy = cursorY - panY;
+        // aplicar rot^{-1} to map to pre-rotation coordinates
+        const origX = (dx * INV_COS - dy * INV_SIN) / oldScale;
+        const origY = (dx * INV_SIN + dy * INV_COS) / oldScale;
+
+        // ahora mapear de nuevo con nueva escala y rotación para obtener nuevo pan
+        const nx = origX * newScale;
+        const ny = origY * newScale;
+        // aplicar rot (R) to (nx,ny)
+        const rx = nx * COS_R - ny * SIN_R;
+        const ry = nx * SIN_R + ny * COS_R;
+
+        panX = cursorX - rx;
+        panY = cursorY - ry;
+        userScale = newScale;
+        applyTransform();
+    }, {passive:false});
+
+    // panning con clic derecho
+    let panning = false;
+    let startX = 0, startY = 0, startPanX = 0, startPanY = 0;
+    gridEl.addEventListener('mousedown', (e)=>{
+        if(e.button === 2){
+            panning = true;
+            startX = e.clientX;
+            startY = e.clientY;
+            startPanX = panX;
+            startPanY = panY;
+            // evitar menú contextual
+            e.preventDefault();
+            gridEl.style.cursor = 'grabbing';
+        }
+    });
+    window.addEventListener('mousemove', (e)=>{
+        if(!panning) return;
+        const dx = e.clientX - startX;
+        const dy = e.clientY - startY;
+        panX = startPanX + dx;
+        panY = startPanY + dy;
+        applyTransform();
+    });
+    window.addEventListener('mouseup', (e)=>{
+        if(e.button === 2) {
+            panning = false;
+            gridEl.style.cursor = '';
+        }
+    });
+
+    // reset por botón y tecla '0' o 'r'
+    const zoomResetBtn = document.getElementById('zoomReset');
+    function resetZoom(){
+        userScale = 1;
+        panX = 0;
+        panY = 0;
+        applyTransform();
+    }
+    if(zoomResetBtn) zoomResetBtn.addEventListener('click', resetZoom);
+    window.addEventListener('keydown', (e)=>{
+        if(e.key === '0' || e.key === 'r'){
+            resetZoom();
+        }
+    });
+    // calcular pan inicial para centrar la cuadrícula rotada dentro del wrapper
+    window.requestAnimationFrame(()=>{
+        const wrapper = document.querySelector('.grid-wrapper');
+        if(wrapper){
+            const wRect = wrapper.getBoundingClientRect();
+            const cx = wRect.width / 2;
+            const cy = wRect.height / 2;
+            const orig = 779;
+            const half = orig / 2;
+            const rx = (half * COS_R - half * SIN_R) * userScale;
+            const ry = (half * SIN_R + half * COS_R) * userScale;
+            panX = cx - rx;
+            panY = cy - ry;
+        }
+        // aplicar transform inicial para que la cuadrícula aparezca ya rotada y centrada al cargar
+        applyTransform();
+    });
+}
+
+function paint(cell){
+
+    if(eraseMode){
+
+        cell.style.background=EMPTY_COLOR;
+
+    }else{
+
+        cell.style.background=colorPicker.value;
+
+    }
+
+}
+
+function setObjectMode(active){
+    objectMode=active;
+    objectEraseMode=false;
+    objectModeBtn.classList.toggle("active", active);
+    paintBtn.classList.toggle("active", !active && !eraseMode);
+    eraseBtn.classList.toggle("active", !active && eraseMode);
+}
+
+function setEraseMode(active){
+    eraseMode=active;
+    objectEraseMode=false;
+    eraseBtn.classList.toggle("active", active);
+    paintBtn.classList.toggle("active", !active && !objectMode);
+    objectModeBtn.classList.toggle("active", objectMode);
+}
+
+function setObjectEraseMode(active){
+    objectEraseMode=active;
+    if(active){
+        objectMode=false;
+        eraseMode=false;
+    }
+    eraseBtn.classList.toggle("active", active);
+    paintBtn.classList.toggle("active", !active && !objectMode && !eraseMode);
+    objectModeBtn.classList.toggle("active", objectMode);
+}
+
+function setObjectSize(size){
+    selectedObjectSize=size;
+    document.querySelectorAll(".object-size-btn").forEach(btn=>{
+        btn.classList.toggle("active", Number(btn.dataset.size)===size);
+    });
+}
+
+function clearObjects(){
+    objects.forEach(obj=>obj.remove());
+    objects.length=0;
+}
+
+function renderObject(objectEl, x, y, size, color){
+    const cellSize = 12;
+    const cellGap = 1;
+    const span = size * cellSize + (size - 1) * cellGap;
+
+    objectEl.className = size === 5 ? "object tree" : "object";
+    objectEl.dataset.x=x;
+    objectEl.dataset.y=y;
+    objectEl.dataset.size=size;
+    objectEl.style.left=`${x * (cellSize + cellGap)}px`;
+    objectEl.style.top=`${y * (cellSize + cellGap)}px`;
+    objectEl.style.width=`${span}px`;
+    objectEl.style.height=`${span}px`;
+    objectEl.style.background=color || colorPicker.value;
+}
+
+function canPlaceObjectAt(x, y, size){
+    if(x + size > SIZE || y + size > SIZE){
+        return false;
+    }
+
+    if(size === 5 && objects.some(obj => Number(obj.dataset.size) === 5)){
+        return false;
+    }
+
+    const rect = {
+        x,
+        y,
+        right: x + size,
+        bottom: y + size
+    };
+
+    return !objects.some(obj=>{
+        const objX = Number(obj.dataset.x);
+        const objY = Number(obj.dataset.y);
+        const objSize = Number(obj.dataset.size);
+        return rect.x < objX + objSize && rect.right > objX && rect.y < objY + objSize && rect.bottom > objY;
+    });
+}
+
+function placeObjectAtCell(cell){
+    const x=Number(cell.dataset.x);
+    const y=Number(cell.dataset.y);
+
+    if(!canPlaceObjectAt(x, y, selectedObjectSize)){
+        return;
+    }
+
+    const objectEl=document.createElement("div");
+    renderObject(objectEl, x, y, selectedObjectSize, colorPicker.value);
+
+    if(selectedObjectSize === 5){
+        const canopy=document.createElement("div");
+        canopy.className="tree-canopy";
+        objectEl.appendChild(canopy);
+    }
+
+    objectLayer.appendChild(objectEl);
+    objects.push(objectEl);
+}
+
+grid.addEventListener("mousedown",e=>{
+    if(e.button !== 0) return;
+
+    const targetObject = e.target.closest?.(".object");
+    if(targetObject){
+        if(objectEraseMode || eraseMode){
+            targetObject.remove();
+            const index = objects.indexOf(targetObject);
+            if(index !== -1) objects.splice(index, 1);
+        }
+        return;
+    }
+
+    const targetCell = e.target.classList.contains("cell") ? e.target : null;
+
+    if(!targetCell) return;
+
+    if(objectMode){
+        placeObjectAtCell(targetCell);
+        return;
+    }
+
+    drawing=true;
+    paint(targetCell);
+});
+
+grid.addEventListener("mouseover",e=>{
+
+    if(!drawing) return;
+
+    if(!e.target.classList.contains("cell")) return;
+
+    paint(e.target);
+
+});
+
+window.addEventListener("mouseup",()=>{
+
+    drawing=false;
+
+});
+
+grid.addEventListener("contextmenu",e=>e.preventDefault());
+
+document.getElementById("paintBtn").onclick=()=>{
+    setEraseMode(false);
+    setObjectMode(false);
+};
+
+document.getElementById("eraseBtn").onclick=()=>{
+    if(objectEraseMode){
+        setObjectEraseMode(false);
+    } else {
+        setObjectEraseMode(false);
+        setEraseMode(true);
+        setObjectMode(false);
+    }
+};
+
+document.getElementById("objectModeBtn").onclick=()=>{
+    setEraseMode(false);
+    setObjectMode(true);
+};
+
+document.querySelectorAll(".object-size-btn").forEach(btn=>{
+    btn.onclick=()=>setObjectSize(Number(btn.dataset.size));
+});
+
+document.getElementById("clearBtn").onclick=()=>{
+
+    if(!confirm("¿Limpiar toda la cuadrícula?")) return;
+
+    cells.forEach(c=>c.style.background=EMPTY_COLOR);
+    clearObjects();
+
+};
+
+document.getElementById("saveBtn").onclick=()=>{
+
+    const data=[];
+
+    cells.forEach(c=>data.push(c.style.background));
+
+    const payload={
+        cells:data,
+        objects: objects.map(obj=>({
+            x:Number(obj.dataset.x),
+            y:Number(obj.dataset.y),
+            size:Number(obj.dataset.size),
+            color:obj.style.background
+        }))
+    };
+
+    const blob=new Blob([JSON.stringify(payload)],{type:"application/json"});
+
+    const a=document.createElement("a");
+
+    a.href=URL.createObjectURL(blob);
+
+    a.download="base.json";
+
+    a.click();
+
+};
+
+function loadGridData(parsed){
+    const data = Array.isArray(parsed) ? parsed : parsed.cells || [];
+
+    cells.forEach((cell,i)=>{
+        cell.style.background = data[i] || EMPTY_COLOR;
+    });
+
+    if(Array.isArray(parsed)){
+        clearObjects();
+    } else if(parsed.objects){
+        clearObjects();
+        parsed.objects.forEach(obj=>{
+            const objectEl=document.createElement("div");
+            renderObject(objectEl, obj.x, obj.y, obj.size, obj.color || colorPicker.value);
+            objectLayer.appendChild(objectEl);
+            objects.push(objectEl);
+        });
+    }
+}
+
+document.getElementById("loadInput").addEventListener("change",e=>{
+
+    const file=e.target.files[0];
+
+    if(!file) return;
+
+    const reader=new FileReader();
+
+    reader.onload=()=>{
+        loadGridData(JSON.parse(reader.result));
+    };
+
+    reader.readAsText(file);
+
+});
+
+</script>
+
+</body>
+</html>
